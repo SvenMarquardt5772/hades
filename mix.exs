@@ -30,7 +30,7 @@ defmodule Hades.MixProject do
     [
       {:sweet_xml, "~> 0.6.6"},
       {:briefly, "~> 0.3"},
-      {:elixir_uuid, "~> 1.2"},
+      {:uuid, "~> 1.1"},
 
       # DEV-DEPS
       {:ex_doc, "~> 0.21", only: :dev, runtime: false}

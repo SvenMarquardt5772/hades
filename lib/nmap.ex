@@ -41,7 +41,11 @@ defmodule Hades.NMAP do
   def init([{option, target}, self_pid]) do
     Process.flag(:trap_exit, true)
 
-    path = Helpers.hades_path()
+    path =
+      case Helpers.hades_path() do
+        path when is_binary(path) -> path
+        {:error, :no_temp} -> Process.exit(self_pid, :normal)
+      end
 
     port =
       Port.open({:spawn, "nmap #{option} -oX #{path} #{target}"}, [

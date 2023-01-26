@@ -154,13 +154,14 @@ defmodule Hades.Helpers do
   """
   @spec prepare(command :: Command.t()) :: {binary() | nil, list(binary)}
   def prepare(%Command{scan_types: scan_types, target: target}) do
-    if (length(scan_types) == 0) do
+    if length(scan_types) == 0 do
       raise ArgumentError, "Must specify atleast one scan type"
     end
 
-    if (target == "") do
+    if target == "" do
       raise ArgumentError, "Must specify a target"
     end
+
     options = Enum.map(scan_types, &arg_for_option/1) |> List.flatten()
     {Enum.join(options, " "), target}
   end
@@ -203,11 +204,23 @@ defmodule Hades.Helpers do
       iex> Hades.Helpers.hades_path()
       "/var/folders/c1/f0tm33sd3tgg_ds8kyhykyw80000gn/T/briefly-1581/hades-73279-791202-3hades/8b09d31e1a1142869ce8b15faf27ed45.xml"
   """
+  @spec hades_path() :: binary() | {:error,:no_temp}
   def hades_path do
     case Application.get_env(:hades, :output_path, nil) do
       nil ->
-        {:ok, path} = Briefly.create(directory: true)
-        path <> "/" <> UUID.uuid4(:hex) <> ".xml"
+        temp_directory = System.tmp_dir() |> Path.join("hades")
+
+        case File.mkdir_p(temp_directory) do
+          :ok ->
+            (temp_directory |> Path.join(UUID.uuid4())) <> ".xml"
+
+          {:error, posix_code} ->
+            Logger.warn(
+              "Could not create temp directory for hades output because of #{posix_code}"
+            )
+
+            {:error, :no_temp}
+        end
 
       path ->
         path
